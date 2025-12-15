@@ -25,92 +25,208 @@ import {
   MessageCircle,
   X,
   Trash2,
+  Package,
 } from 'lucide-react'
 import './App.css'
+import { db } from './supabase'
 
 // ---------- Constants describing backend location and allowed domains ----------
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000'
 const ALLOWED_DOMAINS = ['bmsce.ac.in', 'bmsca.org', 'bmscl.ac.in']
+const USE_SUPABASE = import.meta.env.VITE_USE_SUPABASE === 'true' || !!import.meta.env.VITE_SUPABASE_URL
 
-// ---------- Default category tabs rendered on the home page ----------
+// ---------- Comprehensive Fiverr-style category tabs ----------
 const SERVICE_CATEGORIES = [
   { id: 'all', label: 'All Services', emoji: '✨' },
-  { id: 'cad-homework', label: 'CAD Homework', emoji: '📐' },
-  { id: 'maths-assignment', label: 'Maths Assignment', emoji: '➗' },
-  { id: 'autocad-panel', label: 'AutoCAD Event Panel', emoji: '🧊' },
-  { id: 'ui-ux', label: 'UI / UX Project', emoji: '🎨' },
-  { id: 'project-help', label: 'Project Help', emoji: '🛠️' },
-  { id: 'event-planning', label: 'Event Planning', emoji: '🎉' },
-  { id: 'content-writing', label: 'Content Writing', emoji: '✍️' },
-  { id: 'video-editing', label: 'Video Editing', emoji: '🎬' },
-  { id: 'web-development', label: 'Web Development', emoji: '💻' },
-  { id: 'graphic-design', label: 'Graphic Design', emoji: '🎨' },
-  { id: 'presentation', label: 'Presentation Design', emoji: '📊' },
-  { id: 'research', label: 'Research Help', emoji: '🔬' },
-  { id: 'tutoring', label: 'Tutoring', emoji: '📚' },
+  { id: 'trending', label: 'Trending', emoji: '🔥' },
+  { id: 'graphics-design', label: 'Graphics & Design', emoji: '🎨' },
+  { id: 'programming-tech', label: 'Programming & Tech', emoji: '💻' },
+  { id: 'digital-marketing', label: 'Digital Marketing', emoji: '📱' },
+  { id: 'video-animation', label: 'Video & Animation', emoji: '🎬' },
+  { id: 'writing-translation', label: 'Writing & Translation', emoji: '✍️' },
+  { id: 'music-audio', label: 'Music & Audio', emoji: '🎵' },
+  { id: 'business', label: 'Business', emoji: '💼' },
+  { id: 'finance', label: 'Finance', emoji: '💰' },
+  { id: 'ai-services', label: 'AI Services', emoji: '🤖' },
 ]
 
-// ---------- Fallback service catalog used if the backend is offline ----------
+// ---------- Detailed service subcategories for popup displays ----------
+const SERVICE_SUBCATEGORIES = {
+  'graphics-design': [
+    'Logo Design', 'Brand Style Guides', 'Business Cards & Stationery', 'Fonts & Typography',
+    'Art Direction', 'Illustration', 'AI Artists', 'AI Avatar Design', 'Portraits & Caricatures',
+    'Comic Illustration', 'Cartoon Illustration', 'Storyboards', 'Album Cover Design', 'Pattern Design',
+    'Website Design', 'App Design', 'UX Design', 'Landing Page Design', 'Icon Design',
+    'Industrial & Product Design', 'Character Modeling', 'Game Art', 'Graphics for Streamers',
+    'Brochure Design', 'Flyer Design', 'Packaging & Label Design', 'Poster Design',
+    'Book Design', 'Book Covers', 'Book Layout Design & Typesetting', 'Children\'s Book Illustration',
+    'Comic Book Illustration', 'Image Editing', 'AI Image Editing', 'Presentation Design',
+    'Resume Design', 'Infographic Design', 'Vector Tracing', 'Social Media Design',
+    'Architecture & Interior Design', 'Landscape Design', 'Building Engineering', 'Lighting Design',
+    'T-Shirts & Merchandise', 'Fashion Design', 'Jewelry Design', '3D Architecture',
+    '3D Industrial Design', '3D Fashion & Garment', '3D Printing Characters', '3D Landscape', '3D Game Art'
+  ],
+  'programming-tech': [
+    'Business Websites', 'E-Commerce Development', 'Custom Websites', 'Landing Pages', 'Dropshipping Websites',
+    'WordPress', 'Shopify', 'Wix', 'Webflow', 'Bubble',
+    'Website Customization', 'Bug Fixes', 'Backup & Migration',
+    'Python', 'React', 'Java', 'React Native', 'Flutter',
+    'AI Websites & Software', 'AI Mobile Apps', 'AI Integrations', 'AI Agents', 'AI Fine-Tuning',
+    'AI Technology Consulting', 'Development & MVP', 'Troubleshooting & Improvements',
+    'Cross-platform Development', 'Android App Development', 'iOS App Development', 'Mobile App Maintenance',
+    'AI Chatbot', 'Rules Based Chatbot',
+    'Unreal Engine', 'Unity Developers', 'Roblox', 'Fivem',
+    'Cloud Computing', 'DevOps Engineering',
+    'Full Stack Web Apps', 'Automations & Agents', 'APIs & Integrations', 'Databases', 'QA & Review',
+    'User Testing', 'Decentralized Apps (dApps)', 'Cryptocurrencies & Tokens',
+    'Electronics Engineering', 'Support & IT', 'Machine Learning', 'Data Tagging & Annotation'
+  ],
+  'digital-marketing': [
+    'Search Engine Optimization (SEO)', 'Generative Engine Optimization', 'Search Engine Marketing (SEM)',
+    'Local SEO', 'E-Commerce SEO', 'Video SEO',
+    'Social Media Marketing', 'Paid Social Media', 'Social Commerce', 'Influencer Marketing', 'Online Communities',
+    'TikTok Shop', 'Facebook Ads Campaign', 'Instagram Marketing', 'YouTube Promotion', 'Google SEM',
+    'Shopify Marketing', 'Video Marketing', 'E-Commerce Marketing', 'Email Marketing', 'Email Automations',
+    'Marketing Automation', 'Guest Posting', 'Affiliate Marketing', 'Display Advertising', 'Public Relations',
+    'AI Marketing Prompt Strategy', 'Brand Personality Design', 'Email Marketing Personalization',
+    'AI-Powered Campaign Management', 'AI-Powered Ad Bidding & Automation',
+    'Marketing Strategy', 'Marketing Concepts & Ideation', 'Conversion Rate Optimization (CRO)',
+    'Conscious Branding & Marketing', 'Web Analytics', 'Marketing Advice',
+    'Music Promotion', 'Podcast Marketing', 'Mobile App Marketing', 'Book & eBook Marketing'
+  ],
+  'video-animation': [
+    'Video Editing', 'Visual Effects', 'Intro & Outro Videos', 'Video Repurposing',
+    'Video Templates Editing', 'Subtitles & Captions',
+    'Video Ads & Commercials', 'Social Media Videos', 'Music Videos', 'Slideshow Videos',
+    'UGC Videos', 'TikTok UGC Videos', 'Instagram UGC Videos', 'Spokesperson Videos',
+    'Logo Animation', 'Lottie & Web Animation', 'Text Animation', 'Video Art',
+    'Character Animation', 'Animated GIFs', 'Animation for Kids', 'Animation for Streamers', 'Rigging',
+    'Videographers', 'Drone Videography', 'Filmed Video Production',
+    'Animated Explainers', 'Live Action Explainers', 'Screencasting Videos',
+    'eLearning Video Production', 'Crowdfunding Videos',
+    '3D Product Animation', 'E-Commerce Product Videos', 'Corporate Videos', 'App & Website Previews',
+    'AI UGC', 'AI Video Art', 'AI Videography', 'AI Music Videos', 'AI Video Avatars',
+    'Virtual & Streaming Avatars', 'Article to Video', 'Game Trailers', 'Game Recordings & Guides',
+    'Meditation Videos', 'Real Estate Promos', 'Book Trailers', 'Video Advice'
+  ],
+  'music-audio': [
+    'Music Producers', 'Composers', 'Singers & Vocalists', 'Session Musicians',
+    'Songwriters', 'Jingles & Intros', 'Custom Songs',
+    '24hr Turnaround', 'Female Voice Over', 'Male Voice Over', 'French Voice Over', 'German Voice Over',
+    'Mixing & Mastering', 'Audio Editing', 'Vocal Tuning',
+    'Podcast Production', 'Audiobook Production', 'Audio Ads Production', 'Voice Synthesis & AI',
+    'DJ Drops & Tags', 'DJ Mixing', 'Remixing',
+    'Sound Design', 'Meditation Music', 'Audio Logo & Sonic Branding',
+    'Custom Patches & Samples', 'Audio Plugin Development',
+    'Online Music Lessons', 'Music Transcription', 'Music & Audio Advice'
+  ]
+}
+
+// ---------- Fallback service catalog used if the backend is offline or empty ----------
 const FALLBACK_SERVICES = [
   {
-    id: 'seed-cad',
-    title: 'CAD Homework Lifeline',
-    description: 'DWG cleanups, orthographic projections, and annotated sheets in INR.',
-    price: 1200,
+    id: 'seed-logo',
+    title: 'Professional Logo Design',
+    description: 'Custom logo design with multiple revisions, brand identity guidelines, and high-resolution files. Perfect for startups and businesses looking to establish their brand.',
+    price: 2500,
     currency: 'INR',
-    category: 'cad-homework',
+    category: 'graphics-design',
     hostName: 'Riya K',
-    hostEmail: 'riya.cad@bmsce.ac.in',
+    hostEmail: 'riya.design@bmsce.ac.in',
     hostRating: 4.9,
-    tags: ['cad', 'autocad', 'engineering'],
+    tags: ['logo', 'branding', 'design', 'graphics'],
+    deliveryEstimate: '3-5 days',
   },
   {
-    id: 'seed-math',
-    title: 'Maths Assignment Sprint',
-    description: 'Calculus + statistics walkthrough videos recorded overnight.',
-    price: 900,
+    id: 'seed-website',
+    title: 'Full Stack Web Development',
+    description: 'Complete website development using React, Node.js, and MongoDB. Includes responsive design, database setup, and deployment assistance.',
+    price: 15000,
     currency: 'INR',
-    category: 'maths-assignment',
+    category: 'programming-tech',
     hostName: 'Arjun M',
-    hostEmail: 'arjun.maths@bmsce.ac.in',
+    hostEmail: 'arjun.dev@bmsce.ac.in',
     hostRating: 4.8,
-    tags: ['maths'],
+    tags: ['web development', 'react', 'nodejs', 'full stack'],
+    deliveryEstimate: '2-3 weeks',
   },
   {
-    id: 'seed-uiux',
-    title: 'UI/UX Project Rescue',
-    description: 'Figma rebuild + heuristic review + submission-ready slides.',
-    price: 1800,
+    id: 'seed-seo',
+    title: 'SEO Optimization Service',
+    description: 'Complete SEO audit and optimization for your website. Includes keyword research, on-page optimization, and technical SEO improvements.',
+    price: 3500,
     currency: 'INR',
-    category: 'ui-ux',
+    category: 'digital-marketing',
     hostName: 'Dev Patel',
-    hostEmail: 'dev.uiux@bmscl.ac.in',
+    hostEmail: 'dev.marketing@bmscl.ac.in',
     hostRating: 4.7,
-    tags: ['figma', 'ux', 'presentation'],
+    tags: ['seo', 'marketing', 'optimization'],
+    deliveryEstimate: '1-2 weeks',
   },
   {
-    id: 'seed-panel',
-    title: 'AutoCAD Event Panel',
-    description: 'Panels + booths with exploded views and cut lists.',
+    id: 'seed-video',
+    title: 'Video Editing & Production',
+    description: 'Professional video editing with color correction, transitions, sound design, and motion graphics. Perfect for YouTube, social media, or presentations.',
+    price: 2000,
+    currency: 'INR',
+    category: 'video-animation',
+    hostName: 'Sahana P',
+    hostEmail: 'sahana.video@bmsce.ac.in',
+    hostRating: 5,
+    tags: ['video editing', 'production', 'motion graphics'],
+    deliveryEstimate: '5-7 days',
+  },
+  {
+    id: 'seed-content',
+    title: 'Content Writing & Blog Posts',
+    description: 'High-quality blog posts, articles, and web content. SEO-optimized, engaging, and tailored to your target audience. Includes research and proofreading.',
     price: 1500,
     currency: 'INR',
-    category: 'autocad-panel',
-    hostName: 'Sahana P',
-    hostEmail: 'sahana.cad@bmsce.ac.in',
-    hostRating: 5,
-    tags: ['events', 'autocad'],
+    category: 'writing-translation',
+    hostName: 'Nisha V',
+    hostEmail: 'nisha.writer@bmsca.org',
+    hostRating: 4.8,
+    tags: ['content writing', 'blog', 'seo'],
+    deliveryEstimate: '3-4 days',
   },
   {
-    id: 'seed-project',
-    title: 'Project Video Polish',
-    description: 'Motion graphics, subtitles, and background score for demo day.',
-    price: 1300,
+    id: 'seed-music',
+    title: 'Music Production & Mixing',
+    description: 'Professional music production, mixing, and mastering services. From beats to full tracks, with high-quality audio output ready for distribution.',
+    price: 3000,
     currency: 'INR',
-    category: 'project-help',
-    hostName: 'Nisha V',
-    hostEmail: 'nisha.media@bmsca.org',
-    hostRating: 4.8,
-    tags: ['video', 'motion'],
+    category: 'music-audio',
+    hostName: 'Karan S',
+    hostEmail: 'karan.music@bmsce.ac.in',
+    hostRating: 4.9,
+    tags: ['music production', 'mixing', 'mastering'],
+    deliveryEstimate: '1 week',
+  },
+  {
+    id: 'seed-ai',
+    title: 'AI Chatbot Development',
+    description: 'Custom AI chatbot using OpenAI or custom models. Integrates with your website or app, handles customer queries, and provides intelligent responses.',
+    price: 8000,
+    currency: 'INR',
+    category: 'ai-services',
+    hostName: 'Priya R',
+    hostEmail: 'priya.ai@bmsce.ac.in',
+    hostRating: 4.9,
+    tags: ['ai', 'chatbot', 'openai', 'automation'],
+    deliveryEstimate: '2 weeks',
+  },
+  {
+    id: 'seed-business',
+    title: 'Business Plan Writing',
+    description: 'Comprehensive business plan with market analysis, financial projections, and strategic planning. Perfect for startups and investors.',
+    price: 5000,
+    currency: 'INR',
+    category: 'business',
+    hostName: 'Rahul T',
+    hostEmail: 'rahul.business@bmsce.ac.in',
+    hostRating: 4.7,
+    tags: ['business plan', 'strategy', 'consulting'],
+    deliveryEstimate: '1-2 weeks',
   },
 ]
 
@@ -144,24 +260,35 @@ function Navbar({
 }) {
   const isHostMode = mode === 'host'
 
-  // Initialize Google Sign-In button
+    // Initialize Google Sign-In button
   useEffect(() => {
-    if (user) return
+    if (user) {
+      // Clear button if user is signed in
+      const googleBtn = document.getElementById('google-signin-button')
+      if (googleBtn) googleBtn.innerHTML = ''
+      return
+    }
+
+    const googleBtn = document.getElementById('google-signin-button')
+    if (!googleBtn) return
 
     const initGoogleSignIn = () => {
-      if (window.google && window.google.accounts) {
-        const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
-        if (!clientId) {
-          console.warn('Google Client ID not configured. Set VITE_GOOGLE_CLIENT_ID in .env')
-          return
-        }
+      if (!window.google || !window.google.accounts) {
+        console.warn('Google Sign-In library not loaded yet')
+        return false
+      }
 
-        const buttonElement = document.getElementById('google-signin-button')
-        if (!buttonElement) return
+      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
+      if (!clientId) {
+        console.error('Google Client ID not configured. Please set VITE_GOOGLE_CLIENT_ID in .env file')
+        googleBtn.innerHTML = '<button class="profile-btn" onclick="window.location.href=\'/signin\'" style="display: flex; align-items: center; gap: 0.5rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> Sign In (Configure Google OAuth)</button>'
+        return false
+      }
 
-        // Clear any existing button
-        buttonElement.innerHTML = ''
+      // Clear any existing button
+      googleBtn.innerHTML = ''
 
+      try {
         window.google.accounts.id.initialize({
           client_id: clientId,
           callback: onGoogleSignIn,
@@ -169,7 +296,7 @@ function Navbar({
           cancel_on_tap_outside: true,
         })
 
-        window.google.accounts.id.renderButton(buttonElement, {
+        window.google.accounts.id.renderButton(googleBtn, {
           type: 'standard',
           theme: 'filled_black',
           size: 'medium',
@@ -177,29 +304,36 @@ function Navbar({
           shape: 'pill',
           logo_alignment: 'left',
         })
+        return true
+      } catch (error) {
+        console.error('Error initializing Google Sign-In:', error)
+        return false
       }
     }
 
     // Try immediately if Google is already loaded
-    if (window.google) {
+    if (window.google && window.google.accounts) {
       initGoogleSignIn()
     } else {
-      // Wait for Google script to load
+      // Wait for Google script to load (script is async defer in index.html)
+      let attempts = 0
+      const maxAttempts = 50 // 5 seconds max wait
       const checkGoogle = setInterval(() => {
-        if (window.google) {
+        attempts++
+        if (window.google && window.google.accounts) {
           clearInterval(checkGoogle)
           initGoogleSignIn()
+        } else if (attempts >= maxAttempts) {
+          clearInterval(checkGoogle)
+          console.error('Google Sign-In library failed to load after 5 seconds')
+          googleBtn.innerHTML = '<button class="profile-btn" onclick="window.location.href=\'/signin\'" style="display: flex; align-items: center; gap: 0.5rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> Sign In</button>'
         }
       }, 100)
-
-      // Cleanup after 10 seconds
-      setTimeout(() => clearInterval(checkGoogle), 10000)
     }
 
     return () => {
-      const buttonElement = document.getElementById('google-signin-button')
-      if (buttonElement) {
-        buttonElement.innerHTML = ''
+      if (googleBtn) {
+        googleBtn.innerHTML = ''
       }
     }
   }, [user, onGoogleSignIn])
@@ -257,9 +391,14 @@ function Navbar({
               {user.usn && <p className="profile-usn">🎓 USN: {user.usn}</p>}
               {user.semester && <p className="profile-semester">📚 Semester: {user.semester}</p>}
             {user.isAdmin && (
-              <Link to="/profile/manage-orders" className="profile-link">
-                <ShieldCheck size={16} /> Manage Orders
-              </Link>
+              <>
+                <Link to="/profile/manage-orders" className="profile-link">
+                  <ShieldCheck size={16} /> Manage Orders
+                </Link>
+                <Link to="/profile/manage-items" className="profile-link">
+                  <Package size={16} /> Manage Items
+                </Link>
+              </>
             )}
             {mode === 'host' && user && (
               <Link to="/hosted-services" className="profile-link">
@@ -342,10 +481,14 @@ function HostListings({ user, services, onDelete, onToast }) {
   const handleDelete = async (serviceId) => {
     if (!confirm('Are you sure you want to delete this listing?')) return
     try {
-      await apiRequest(`/services/${serviceId}`, {
-        method: 'DELETE',
-        headers: { 'x-user-email': user.email },
-      })
+      if (USE_SUPABASE) {
+        await db.deleteService(serviceId, user.email)
+      } else {
+        await apiRequest(`/services/${serviceId}`, {
+          method: 'DELETE',
+          headers: { 'x-user-email': user.email },
+        })
+      }
       if (onToast) onToast('Listing deleted successfully')
       if (onDelete) onDelete()
     } catch (err) {
@@ -416,15 +559,14 @@ function HostCreateListing({ user, onServiceCreated, services, onToast }) {
     portfolioLink: '',
   })
   const [loading, setLoading] = useState(false)
-  const [wordCount, setWordCount] = useState(0)
+  const [charCount, setCharCount] = useState(0)
 
-  const MIN_WORDS = 100
+  const MIN_CHARS = 10
 
   const handleDescriptionChange = (e) => {
     const text = e.target.value
     setFormData({ ...formData, description: text })
-    const words = text.trim().split(/\s+/).filter(Boolean)
-    setWordCount(words.length)
+    setCharCount(text.trim().length)
   }
 
   const handleSubmit = async (e) => {
@@ -434,8 +576,8 @@ function HostCreateListing({ user, onServiceCreated, services, onToast }) {
       return
     }
 
-    if (wordCount < MIN_WORDS) {
-      if (onToast) onToast(`Description must be at least ${MIN_WORDS} words (currently ${wordCount})`)
+    if (charCount < MIN_CHARS) {
+      if (onToast) onToast(`Description must be at least ${MIN_CHARS} characters (currently ${charCount})`)
       return
     }
 
@@ -445,9 +587,10 @@ function HostCreateListing({ user, onServiceCreated, services, onToast }) {
         ? { min: parseFloat(formData.priceMin), max: parseFloat(formData.priceMax) }
         : parseFloat(formData.price)
 
-      const newService = await apiRequest('/services', {
-        method: 'POST',
-        body: JSON.stringify({
+      let newService
+      if (USE_SUPABASE) {
+        // Use Supabase to create service
+        const serviceData = await db.createService({
           title: formData.title,
           description: formData.description,
           price,
@@ -457,8 +600,39 @@ function HostCreateListing({ user, onServiceCreated, services, onToast }) {
           tags: formData.tags.split(',').map((t) => t.trim()).filter(Boolean),
           deliveryEstimate: formData.deliveryEstimate,
           portfolioLink: formData.portfolioLink || null,
-        }),
-      })
+        })
+        // Transform Supabase service to match expected format
+        newService = {
+          id: serviceData.id,
+          title: serviceData.title,
+          description: serviceData.description,
+          category: serviceData.category,
+          price: serviceData.price_min && serviceData.price_max
+            ? { min: serviceData.price_min, max: serviceData.price_max }
+            : (serviceData.price_in_inr || 0),
+          hostName: serviceData.host_name,
+          hostEmail: serviceData.host_email,
+          tags: serviceData.tags || [],
+          deliveryEstimate: serviceData.delivery_estimate,
+          portfolioLink: serviceData.portfolio_link,
+        }
+      } else {
+        // Use REST API
+        newService = await apiRequest('/services', {
+          method: 'POST',
+          body: JSON.stringify({
+            title: formData.title,
+            description: formData.description,
+            price,
+            category: formData.category,
+            hostName: user.name,
+            hostEmail: user.email,
+            tags: formData.tags.split(',').map((t) => t.trim()).filter(Boolean),
+            deliveryEstimate: formData.deliveryEstimate,
+            portfolioLink: formData.portfolioLink || null,
+          }),
+        })
+      }
       if (onToast) onToast('Listing created successfully!')
       setFormData({
         title: '',
@@ -472,10 +646,11 @@ function HostCreateListing({ user, onServiceCreated, services, onToast }) {
         deliveryEstimate: '',
         portfolioLink: '',
       })
-      setWordCount(0)
+      setCharCount(0)
       if (onServiceCreated) onServiceCreated(newService)
     } catch (err) {
-      if (onToast) onToast('Failed to create listing. Please try again.')
+      const errorMessage = err?.message || 'Failed to create listing. Please try again.'
+      if (onToast) onToast(errorMessage)
       console.error('Create listing error:', err)
     } finally {
       setLoading(false)
@@ -502,20 +677,20 @@ function HostCreateListing({ user, onServiceCreated, services, onToast }) {
         </div>
         <div className="form-group">
           <label htmlFor="description">
-            Description <span className="word-count">({wordCount}/{MIN_WORDS} words minimum)</span>
+            Description <span className="char-count">({charCount}/{MIN_CHARS} characters minimum)</span>
           </label>
           <textarea
             id="description"
             value={formData.description}
             onChange={handleDescriptionChange}
-            placeholder="Describe what you offer in detail. Minimum 100 words required..."
+            placeholder="Describe what you offer in detail. Minimum 10 characters required..."
             rows={6}
             required
-            className={wordCount < MIN_WORDS ? 'description-warning' : ''}
+            className={charCount < MIN_CHARS ? 'description-warning' : ''}
           />
-          {wordCount < MIN_WORDS && (
-            <p className="word-count-warning">
-              {MIN_WORDS - wordCount} more words needed
+          {charCount < MIN_CHARS && (
+            <p className="char-count-warning">
+              {MIN_CHARS - charCount} more characters needed
             </p>
           )}
         </div>
@@ -621,7 +796,116 @@ function HostCreateListing({ user, onServiceCreated, services, onToast }) {
 }
 
 /**
+ * ServiceDetailModal - beautiful popup showing full service details
+ */
+function ServiceDetailModal({ service, open, onClose, onAddToCart, onToggleWishlist, isWishlisted, user, mode }) {
+  if (!open || !service) return null
+
+  // Handle price display - could be number or object with min/max
+  const getPriceDisplay = () => {
+    if (typeof service.price === 'object' && service.price?.min && service.price?.max) {
+      return `₹${service.price.min.toLocaleString('en-IN')} - ₹${service.price.max.toLocaleString('en-IN')}`
+    }
+    return `₹${(service.price || service.price_in_inr || 0).toLocaleString('en-IN')}`
+  }
+  
+  const price = getPriceDisplay()
+
+  return (
+    <div className="modal-overlay service-detail-overlay" onClick={onClose}>
+      <div className="modal-content service-detail-modal" onClick={(e) => e.stopPropagation()}>
+        <button className="modal-close service-detail-close" onClick={onClose}>
+          <X size={24} />
+        </button>
+        
+        <div className="service-detail-header">
+          <div className="service-detail-header-top">
+            <div>
+              <span className="service-detail-category">{service.category}</span>
+              <h2 className="service-detail-title">{service.title}</h2>
+            </div>
+            <button
+              className={isWishlisted(service.id) ? 'wishlist-btn active service-detail-wishlist' : 'wishlist-btn service-detail-wishlist'}
+              onClick={() => onToggleWishlist(service.id)}
+            >
+              <Heart size={20} />
+            </button>
+          </div>
+          
+          <div className="service-detail-host">
+            <div className="host-meta">
+              <Star size={18} fill="#ffc107" />
+              <span className="host-rating">{service.hostRating ?? 4.8}</span>
+              <span className="host-name">· {service.hostName}</span>
+            </div>
+            {service.hostEmail && (
+              <span className="host-email">{service.hostEmail}</span>
+            )}
+          </div>
+        </div>
+
+        <div className="service-detail-body">
+          <div className="service-detail-description">
+            <h3>About This Service</h3>
+            <p>{service.description}</p>
+          </div>
+
+          {service.tags && service.tags.length > 0 && (
+            <div className="service-detail-tags">
+              <h3>Skills & Tags</h3>
+              <div className="tags-list">
+                {service.tags.map((tag, idx) => (
+                  <span key={idx} className="tag">{tag}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {service.deliveryEstimate && (
+            <div className="service-detail-delivery">
+              <h3>Delivery Time</h3>
+              <p>{service.deliveryEstimate}</p>
+            </div>
+          )}
+
+          {service.portfolioLink && (
+            <div className="service-detail-portfolio">
+              <h3>Portfolio</h3>
+              <a href={service.portfolioLink} target="_blank" rel="noopener noreferrer" className="portfolio-link">
+                View Portfolio →
+              </a>
+            </div>
+          )}
+        </div>
+
+        <div className="service-detail-footer">
+          <div className="service-detail-price">
+            <span className="price-label">Starting at</span>
+            <span className="price-value">{price}</span>
+          </div>
+          {mode === 'student' ? (
+            <button
+              className="btn-primary btn-add-to-cart-large"
+              disabled={!user}
+              onClick={() => {
+                onAddToCart(service.id)
+                onClose()
+              }}
+            >
+              {user ? 'Show Interest' : 'Sign in to Show Interest'}
+            </button>
+          ) : (
+            <span className="host-hint">Switch to student mode to hire</span>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/**
  * ServicesGrid shows each listing with wishlist/cart actions and INR pricing.
+ * Now opens a detailed popup when clicked.
  */
 function ServicesGrid({
   services,
@@ -630,13 +914,18 @@ function ServicesGrid({
   onAddToCart,
   onToggleWishlist,
   isWishlisted,
+  onServiceClick,
 }) {
   const displayList = services
 
   return (
     <div className="grid">
       {displayList.map((service) => (
-        <article key={service.id} className="service-card">
+        <article 
+          key={service.id} 
+          className="service-card service-card-clickable"
+          onClick={() => onServiceClick(service)}
+        >
           <header>
             <div>
               <p className="service-category">{service.category}</p>
@@ -645,7 +934,10 @@ function ServicesGrid({
             </div>
             <button
               className={isWishlisted(service.id) ? 'wishlist-btn active' : 'wishlist-btn'}
-              onClick={() => onToggleWishlist(service.id)}
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggleWishlist(service.id)
+              }}
             >
               <Heart size={18} />
             </button>
@@ -657,15 +949,22 @@ function ServicesGrid({
               <span>· {service.hostName}</span>
             </div>
             <div className="price-group">
-              <strong>₹{service.price?.toLocaleString('en-IN') ?? '0'}</strong>
+              <strong>
+                {typeof service.price === 'object' && service.price?.min
+                  ? `₹${service.price.min.toLocaleString('en-IN')}+`
+                  : `₹${(service.price || 0).toLocaleString('en-IN')}`}
+              </strong>
               {mode === 'student' ? (
                 <button
                   className="btn-primary small"
                   disabled={!user}
-                  onClick={() => onAddToCart(service.id)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onAddToCart(service.id)
+                  }}
                 >
-                  Add to cart
-                </button>
+                    Interested
+                  </button>
               ) : (
                 <span className="host-hint">Switch to student mode to hire</span>
               )}
@@ -854,7 +1153,7 @@ function AddToCartModal({ service, open, onClose, onConfirm, user }) {
     <div className="modal-overlay">
       <div className="modal-content">
         <div className="modal-header">
-          <h3>Add to Cart</h3>
+          <h3>Show Interest</h3>
           <button className="modal-close" onClick={onClose}>
             <X size={20} />
           </button>
@@ -863,6 +1162,11 @@ function AddToCartModal({ service, open, onClose, onConfirm, user }) {
           <div className="modal-service-info">
             <h4>{service?.title}</h4>
             <p>{service?.description}</p>
+            {service?.hostEmail && (
+              <p className="host-contact-info">
+                <strong>Contact Host:</strong> <a href={`mailto:${service.hostEmail}`}>{service.hostEmail}</a>
+              </p>
+            )}
           </div>
           <div className="form-group">
             <label htmlFor="portfolioLink">
@@ -921,7 +1225,7 @@ function AddToCartModal({ service, open, onClose, onConfirm, user }) {
             onClick={handleConfirm}
             disabled={!portfolioLink.trim() || charCount === 0}
           >
-            Add to Cart
+            Show Interest
           </button>
         </div>
       </div>
@@ -1115,6 +1419,11 @@ function CartPage({ cart, onRemove, onCheckout, loading }) {
                     <strong>Your message:</strong> {item.message}
                   </p>
                 )}
+                {item.service?.hostEmail && (
+                  <p className="cart-host-contact">
+                    <strong>Contact Host:</strong> <a href={`mailto:${item.service.hostEmail}`}>{item.service.hostEmail}</a>
+                  </p>
+                )}
                 <div className="cart-item-price">
                   <span>
                     {typeof item.service?.price === 'object' && item.service?.price?.min
@@ -1181,7 +1490,7 @@ function WishlistPage({ wishlist, onToggle, onAddToCart, mode, user }) {
                     disabled={mode !== 'student' || !user}
                     onClick={() => onAddToCart(item.serviceId)}
                   >
-                    Add to cart
+                    Interested
                   </button>
                 </div>
               </footer>
@@ -1194,65 +1503,309 @@ function WishlistPage({ wishlist, onToggle, onAddToCart, mode, user }) {
 }
 
 /**
- * SignInPage lets users provide campus email or simulate Google OAuth prep.
+ * WelcomeSignInModal - Merch-style welcome modal with Google Sign-In
  */
-function SignInPage({ onEmailLogin, loading }) {
+function WelcomeSignInModal({ open, onClose, onGoogleSignIn, user }) {
+  const [showAccountDropdown, setShowAccountDropdown] = useState(false)
+
+  useEffect(() => {
+    if (user) {
+      setShowAccountDropdown(false)
+    }
+  }, [user])
+
+  if (!open) return null
+
+  return (
+    <div className="welcome-modal-overlay" onClick={onClose}>
+      <div className="welcome-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="welcome-modal-header">
+          <h2>Welcome</h2>
+          <button className="welcome-modal-close" onClick={onClose}>
+            <X size={20} />
+          </button>
+        </div>
+        <div className="welcome-modal-body">
+          {!user ? (
+            <>
+              <p className="welcome-text">Sign in to access your cart and orders.</p>
+              <div className="welcome-google-signin">
+                <div className="welcome-google-button-container">
+                  <div id="welcome-google-signin-button" className="welcome-google-button-wrapper" />
+                </div>
+                <div className="welcome-domains-info">
+                  <p className="welcome-domains-title">Use your BMSCE Google account:</p>
+                  <ul className="welcome-domains-list">
+                    <li>@bmsce.ac.in</li>
+                    <li>@bmsca.org</li>
+                    <li>@bmscl.ac.in</li>
+                  </ul>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="welcome-signed-in">
+              <p className="welcome-signed-in-text">Signed in as:</p>
+              <div className="welcome-user-info">
+                {user.image && (
+                  <img src={user.image} alt={user.name} className="welcome-user-avatar" />
+                )}
+                <div className="welcome-user-details">
+                  <p className="welcome-user-name">{user.name}</p>
+                  <p className="welcome-user-email">{user.email}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * SignInPage lets users provide campus email or use Google OAuth.
+ */
+function SignInPage({ onEmailLogin, onGoogleSignIn, loading, user }) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [error, setError] = useState(null)
+  const [welcomeModalOpen, setWelcomeModalOpen] = useState(!user)
+
+  // Initialize Google Sign-In button in the welcome modal
+  useEffect(() => {
+    if (!welcomeModalOpen || user) return
+
+    const googleBtn = document.getElementById('welcome-google-signin-button')
+    if (!googleBtn) return
+
+    const initGoogleSignIn = () => {
+      if (!window.google || !window.google.accounts) {
+        console.warn('Google Sign-In library not loaded yet')
+        return false
+      }
+
+      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
+      if (!clientId) {
+        console.error('Google Client ID not configured')
+        googleBtn.innerHTML = '<p style="color: #ef4444; padding: 1rem;">Google Sign-In not configured. Please set VITE_GOOGLE_CLIENT_ID in .env</p>'
+        return false
+      }
+
+      googleBtn.innerHTML = ''
+
+      try {
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: onGoogleSignIn,
+          auto_select: false,
+          cancel_on_tap_outside: true,
+        })
+
+        window.google.accounts.id.renderButton(googleBtn, {
+          type: 'standard',
+          theme: 'outline',
+          size: 'large',
+          text: 'signin_with',
+          shape: 'rectangular',
+          logo_alignment: 'left',
+          width: '100%',
+        })
+        return true
+      } catch (error) {
+        console.error('Error initializing Google Sign-In:', error)
+        return false
+      }
+    }
+
+    if (window.google && window.google.accounts) {
+      initGoogleSignIn()
+    } else {
+      const checkGoogle = setInterval(() => {
+        if (window.google && window.google.accounts) {
+          clearInterval(checkGoogle)
+          initGoogleSignIn()
+        }
+      }, 100)
+
+      setTimeout(() => clearInterval(checkGoogle), 5000)
+    }
+
+    return () => {
+      if (googleBtn) {
+        googleBtn.innerHTML = ''
+      }
+    }
+  }, [welcomeModalOpen, user, onGoogleSignIn])
 
   const handleSubmit = async (event) => {
     event.preventDefault()
     setError(null)
     try {
       await onEmailLogin({ email, name })
+      setWelcomeModalOpen(false)
     } catch (err) {
       setError(err.message)
     }
   }
 
   return (
+    <>
+      <section className="page-shell">
+        <h2>Sign in</h2>
+        <form className="signin-form" onSubmit={handleSubmit}>
+          <label>
+            Name
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Riya CAD" />
+          </label>
+          <label>
+            Campus email
+            <input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="student@bmsce.ac.in"
+            />
+          </label>
+          <button className="btn-primary" disabled={loading}>
+            {loading ? 'Signing in...' : 'Sign in with email'}
+          </button>
+          <button
+            type="button"
+            className="btn-ghost"
+            disabled={loading}
+            onClick={() => setWelcomeModalOpen(true)}
+          >
+            Continue with Google
+          </button>
+          {error && <p className="error-note">{error}</p>}
+        </form>
+      </section>
+      <WelcomeSignInModal
+        open={welcomeModalOpen}
+        onClose={() => setWelcomeModalOpen(false)}
+        onGoogleSignIn={(credentialResponse) => {
+          onGoogleSignIn(credentialResponse)
+          setWelcomeModalOpen(false)
+        }}
+        user={user}
+      />
+    </>
+  )
+}
+
+/**
+ * AdminManageItemsPage shows all hosted services with host details and allows admin to add/remove items
+ */
+function AdminManageItemsPage({ inventory, user, onServiceDeleted, onToast }) {
+  const [hosts, setHosts] = useState([])
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (inventory && inventory.hosts) {
+      setHosts(inventory.hosts)
+    }
+  }, [inventory])
+
+  const handleDeleteService = async (serviceId) => {
+    if (!confirm('Are you sure you want to delete this service? This action cannot be undone.')) return
+    
+    setLoading(true)
+    try {
+      if (USE_SUPABASE) {
+        await db.deleteServiceAdmin(serviceId)
+      } else {
+        await apiRequest(`/services/${serviceId}`, {
+          method: 'DELETE',
+          headers: { 'x-admin-email': user?.email },
+        })
+      }
+      if (onToast) onToast('Service deleted successfully')
+      if (onServiceDeleted) onServiceDeleted()
+    } catch (err) {
+      if (onToast) onToast('Failed to delete service: ' + (err.message || 'Unknown error'))
+      console.error('Delete service error:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (!user?.isAdmin) {
+    return (
+      <section className="page-shell">
+        <h2>Access Denied</h2>
+        <p>You must be an admin to access this page.</p>
+      </section>
+    )
+  }
+
+  return (
     <section className="page-shell">
-      <h2>Sign in</h2>
-      <form className="signin-form" onSubmit={handleSubmit}>
-        <label>
-          Name
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Riya CAD" />
-        </label>
-        <label>
-          Campus email
-          <input
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="student@bmsce.ac.in"
-          />
-        </label>
-        <button className="btn-primary" disabled={loading}>
-          {loading ? 'Signing in...' : 'Sign in with email'}
-        </button>
-        <button
-          type="button"
-          className="btn-ghost"
-          disabled={loading}
-          onClick={() =>
-            onEmailLogin({
-              email: 'student@bmsce.ac.in',
-              name: 'Google Mock User',
-            })
-          }
-        >
-          Continue with Google (configure OAuth later)
-        </button>
-        {error && <p className="error-note">{error}</p>}
-      </form>
+      <h2>Admin · Manage Items</h2>
+      <p className="admin-note">View and manage all hosted services. You can see who hosted each item and their details.</p>
+      
+      {hosts.length === 0 ? (
+        <p className="empty-note">No hosted services found.</p>
+      ) : (
+        <div className="admin-items-container">
+          {hosts.map((hostGroup) => (
+            <div key={hostGroup.hostEmail} className="admin-host-group">
+              <div className="admin-host-header">
+                <div className="admin-host-info">
+                  <h3>{hostGroup.hostName || hostGroup.hostEmail}</h3>
+                  <p className="admin-host-email">{hostGroup.hostEmail}</p>
+                  {hostGroup.phoneNumber && <p className="admin-host-phone">📱 {hostGroup.phoneNumber}</p>}
+                  {hostGroup.usn && <p className="admin-host-usn">🎓 USN: {hostGroup.usn}</p>}
+                  {hostGroup.semester && <p className="admin-host-semester">📚 Semester: {hostGroup.semester}</p>}
+                </div>
+                <div className="admin-host-stats">
+                  <span className="admin-host-service-count">{hostGroup.services?.length || 0} service(s)</span>
+                </div>
+              </div>
+              
+              <div className="admin-services-grid">
+                {hostGroup.services?.map((service) => (
+                  <div key={service.service_id} className="admin-service-card">
+                    <div className="admin-service-header">
+                      <h4>{service.title}</h4>
+                      <button
+                        className="btn-delete-admin"
+                        onClick={() => handleDeleteService(service.service_id)}
+                        disabled={loading}
+                        title="Delete service"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                    <p className="admin-service-category">{service.category}</p>
+                    <p className="admin-service-price">
+                      {service.price_min && service.price_max
+                        ? `₹${service.price_min.toLocaleString('en-IN')} - ₹${service.price_max.toLocaleString('en-IN')}`
+                        : `₹${(service.price_in_inr || 0).toLocaleString('en-IN')}`}
+                    </p>
+                    {service.delivery_estimate && (
+                      <p className="admin-service-delivery">⏱️ {service.delivery_estimate}</p>
+                    )}
+                    {service.created_at && (
+                      <p className="admin-service-created">
+                        Created: {new Date(service.created_at).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </section>
   )
 }
 
 /**
  * AdminOrdersPage shows comprehensive order details with buyer/host info, portfolio links, and chat
+ * Also shows cart/interested items from inventory for admin
  */
-function AdminOrdersPage({ orders, user, cart }) {
+function AdminOrdersPage({ orders, user, cart, inventory }) {
   const isAdmin = user?.isAdmin || false
   const isHost = user && orders.some((o) => o.hostEmail === user.email)
 
@@ -1261,7 +1814,7 @@ function AdminOrdersPage({ orders, user, cart }) {
     // Check if item is still in cart
     const inCart = cart.some((item) => item.serviceId === order.serviceId)
     if (inCart) {
-      return { status: 'In Cart', className: 'order-status-carted' }
+      return { status: 'Interested', className: 'order-status-carted' }
     }
     // Check if paid (status would be 'paid' or 'completed')
     if (order.status === 'paid' || order.status === 'completed') {
@@ -1271,25 +1824,60 @@ function AdminOrdersPage({ orders, user, cart }) {
     return { status: order.status || 'Pending', className: `order-status-${order.status || 'pending'}` }
   }
 
+  // Transform cart items from inventory for admin view
+  const cartItemsFromInventory = isAdmin && inventory?.students ? inventory.students.flatMap(student => 
+    student.items?.map(item => ({
+      id: `cart-${item.id}`,
+      type: 'cart',
+      buyerEmail: student.studentEmail,
+      buyerName: student.studentName,
+      buyerUsn: student.usn,
+      buyerPhone: student.phoneNumber,
+      buyerSemester: student.semester,
+      serviceId: item.serviceId,
+      service: item.service,
+      listingTitle: item.service?.title,
+      listingDescription: item.service?.description,
+      hostEmail: item.service?.hostEmail,
+      hostName: item.service?.hostName,
+      portfolioLink: item.portfolioLink,
+      message: item.message,
+      quantity: item.quantity || 1,
+      price: item.service?.price,
+      total: typeof item.service?.price === 'object' 
+        ? ((item.service.price.min + item.service.price.max) / 2) * (item.quantity || 1)
+        : (item.service?.price || 0) * (item.quantity || 1),
+      createdAt: new Date().toISOString(),
+      placedAt: new Date().toISOString(),
+    })) || []
+  ) : []
+
+  // Combine orders with cart items for admin
+  const allItems = isAdmin ? [...orders, ...cartItemsFromInventory] : orders
+
   return (
     <section className="page-shell">
       <h2>{isAdmin ? 'Admin' : isHost ? 'Host' : 'Manage'} · Orders</h2>
+      {isAdmin && (
+        <p className="host-orders-note">Viewing all orders and interested items. Students who are interested in services and hosts who have created listings.</p>
+      )}
       {isHost && (
         <p className="host-orders-note">Viewing orders for your listings. Students are looking for your services.</p>
       )}
-      {orders.length === 0 ? (
-        <p className="empty-note">No orders yet. Orders will appear here when students add services to cart.</p>
+      {allItems.length === 0 ? (
+        <p className="empty-note">No orders or interested items yet. Items will appear here when students show interest in services.</p>
       ) : (
         <div className="orders-grid">
-          {orders.map((order) => {
+          {allItems.map((order) => {
             const statusInfo = getOrderStatus(order)
+            const isCartItem = order.type === 'cart'
             return (
               <div key={order.id} className="order-card">
               <div className="order-header">
                 <div>
-                  <h3>Order #{order.id.slice(0, 8)}</h3>
-                  <span className={statusInfo.className}>
-                    {statusInfo.status}
+                  <h3>{isCartItem ? 'Interested' : 'Order'} #{order.id.slice(0, 8)}</h3>
+                  <span className={isCartItem ? 'order-status-carted' : statusInfo.className}>
+                    {isCartItem ? 'Interested' : statusInfo.status}
                   </span>
                 </div>
                 <div className="order-meta">
@@ -1305,6 +1893,9 @@ function AdminOrdersPage({ orders, user, cart }) {
                   <h4>Buyer</h4>
                   <p className="email">{order.buyerEmail || order.userEmail}</p>
                   {order.buyerName && <p className="name">{order.buyerName}</p>}
+                  {order.buyerUsn && <p className="usn">🎓 USN: {order.buyerUsn}</p>}
+                  {order.buyerPhone && <p className="phone">📱 {order.buyerPhone}</p>}
+                  {order.buyerSemester && <p className="semester">📚 Semester: {order.buyerSemester}</p>}
                 </div>
                 <div className="party-info">
                   <h4>Host</h4>
@@ -1398,24 +1989,8 @@ function AppShell() {
   const [filteredServices, setFilteredServices] = useState([])
   const [activeCategory, setActiveCategory] = useState('all')
   const [user, setUser] = useState(null)
-  const [cart, setCart] = useState(() => {
-    try {
-      const saved = localStorage.getItem('cart')
-      const parsed = saved ? JSON.parse(saved) : []
-      return Array.isArray(parsed) ? parsed : []
-    } catch {
-      return []
-    }
-  })
-  const [wishlist, setWishlist] = useState(() => {
-    try {
-      const saved = localStorage.getItem('wishlist')
-      const parsed = saved ? JSON.parse(saved) : []
-      return Array.isArray(parsed) ? parsed : []
-    } catch {
-      return []
-    }
-  })
+  const [cart, setCart] = useState([])
+  const [wishlist, setWishlist] = useState([])
   const [orders, setOrders] = useState([])
   const [inventory, setInventory] = useState({ hosts: [], students: [] })
   const [loading, setLoading] = useState(false)
@@ -1424,15 +1999,42 @@ function AppShell() {
   const [modeTransition, setModeTransition] = useState(false)
   const [addToCartModal, setAddToCartModal] = useState({ open: false, service: null })
   const [profileEditModal, setProfileEditModal] = useState(false)
+  const [serviceDetailModal, setServiceDetailModal] = useState({ open: false, service: null })
 
-  // Load services on mount with backend fallback.
+  // Load services on mount with Supabase or backend fallback.
   useEffect(() => {
     async function loadServices() {
       try {
-        const data = await apiRequest('/services')
+        let data
+        if (USE_SUPABASE) {
+          // Use Supabase
+          const servicesData = await db.getServices()
+          // Transform Supabase data to match expected format
+          data = servicesData.map(svc => ({
+            id: svc.id,
+            title: svc.title,
+            description: svc.description,
+            category: svc.category,
+            price: svc.price_min && svc.price_max 
+              ? { min: svc.price_min, max: svc.price_max }
+              : (svc.price_in_inr || 0),
+            hostName: svc.host_name,
+            hostEmail: svc.host_email,
+            hostRating: 4.8, // Default rating
+            tags: svc.tags || [],
+            deliveryEstimate: svc.delivery_estimate,
+            portfolioLink: svc.portfolio_link,
+          }))
+        } else {
+          // Use REST API
+          data = await apiRequest('/services')
+        }
+        
         if (Array.isArray(data)) {
-          setServices(data)
-          setFilteredServices(data)
+          // Always combine database services with fallback services
+          const allServices = [...data, ...FALLBACK_SERVICES]
+          setServices(allServices)
+          setFilteredServices(allServices)
         } else {
           throw new Error('Invalid services data')
         }
@@ -1441,7 +2043,7 @@ function AppShell() {
         console.error('Failed to load services:', _err)
         setServices(FALLBACK_SERVICES)
         setFilteredServices(FALLBACK_SERVICES)
-        setToast('Backend offline, showing fallback services.')
+        setToast(USE_SUPABASE ? 'Failed to load services from database. Showing example services only.' : 'Backend offline, showing fallback services.')
       }
     }
     loadServices()
@@ -1486,26 +2088,40 @@ function AppShell() {
   // Reload services when a new one is created or deleted
   const handleServiceCreated = async () => {
     try {
-      const data = await apiRequest('/services')
+      let data
+      if (USE_SUPABASE) {
+        // Use Supabase
+        const servicesData = await db.getServices()
+        data = servicesData.map(svc => ({
+          id: svc.id,
+          title: svc.title,
+          description: svc.description,
+          category: svc.category,
+          price: svc.price_min && svc.price_max 
+            ? { min: svc.price_min, max: svc.price_max }
+            : (svc.price_in_inr || 0),
+          hostName: svc.host_name,
+          hostEmail: svc.host_email,
+          hostRating: 4.8,
+          tags: svc.tags || [],
+          deliveryEstimate: svc.delivery_estimate,
+          portfolioLink: svc.portfolio_link,
+        }))
+      } else {
+        // Use REST API
+        data = await apiRequest('/services')
+      }
       if (Array.isArray(data)) {
-        setServices(data)
-        setFilteredServices(data)
+        // Always combine database services with fallback services
+        const allServices = [...data, ...FALLBACK_SERVICES]
+        setServices(allServices)
+        setFilteredServices(allServices)
       }
     } catch (_err) {
       // Backend offline, try to reload from current state
       console.error('Failed to reload services:', _err)
     }
   }
-
-  // Persist cart to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cart))
-  }, [cart])
-
-  // Persist wishlist to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('wishlist', JSON.stringify(wishlist))
-  }, [wishlist])
 
   // Load user from localStorage on mount
   useEffect(() => {
@@ -1521,32 +2137,97 @@ function AppShell() {
     }
   }, [])
 
-  // Hydrate cart + wishlist whenever a user signs in.
+  // Persist cart to localStorage always (for example services and backup)
+  useEffect(() => {
+    localStorage.setItem('cart', JSON.stringify(cart))
+  }, [cart])
+
+  // Persist wishlist to localStorage always (for example services and backup)
+  useEffect(() => {
+    localStorage.setItem('wishlist', JSON.stringify(wishlist))
+  }, [wishlist])
+
+  // Load cart and wishlist from database when user is available
   useEffect(() => {
     if (!user) {
-      setCart([])
-      setWishlist([])
-      localStorage.removeItem('user')
+      // No user - load from localStorage as fallback
+      try {
+        const savedCart = localStorage.getItem('cart')
+        const savedWishlist = localStorage.getItem('wishlist')
+        if (savedCart) {
+          const cartData = JSON.parse(savedCart)
+          if (Array.isArray(cartData)) setCart(cartData)
+        }
+        if (savedWishlist) {
+          const wishlistData = JSON.parse(savedWishlist)
+          if (Array.isArray(wishlistData)) setWishlist(wishlistData)
+        }
+      } catch (_err) {
+        // Invalid data, ignore
+      }
       return
     }
-    // Save user to localStorage
+
+    // User is signed in - load from Supabase and merge with localStorage
     localStorage.setItem('user', JSON.stringify(user))
     ;(async () => {
       try {
-        const [cartData, wishlistData] = await Promise.all([
-          apiRequest(`/cart?userEmail=${encodeURIComponent(user.email)}`),
-          apiRequest(`/wishlist?userEmail=${encodeURIComponent(user.email)}`),
-        ])
-        // Merge backend data with localStorage data (prefer backend if available)
-        if (Array.isArray(cartData) && cartData.length > 0) {
-          setCart(cartData)
+        let cartData, wishlistData
+        if (USE_SUPABASE) {
+          // Use Supabase
+          [cartData, wishlistData] = await Promise.all([
+            db.getCart(user.email),
+            db.getWishlist(user.email),
+          ])
+        } else {
+          // Use REST API
+          [cartData, wishlistData] = await Promise.all([
+            apiRequest(`/cart?userEmail=${encodeURIComponent(user.email)}`),
+            apiRequest(`/wishlist?userEmail=${encodeURIComponent(user.email)}`),
+          ])
         }
-        if (Array.isArray(wishlistData) && wishlistData.length > 0) {
-          setWishlist(wishlistData)
+        
+        // Load local items (example services)
+        let localCart = []
+        let localWishlist = []
+        try {
+          const savedLocalCart = localStorage.getItem('local_cart')
+          const savedLocalWishlist = localStorage.getItem('local_wishlist')
+          if (savedLocalCart) localCart = JSON.parse(savedLocalCart).filter(item => item.id?.startsWith('local-'))
+          if (savedLocalWishlist) localWishlist = JSON.parse(savedLocalWishlist).filter(item => item.id?.startsWith('local-'))
+        } catch (_e) {
+          // Ignore local storage errors
+        }
+        
+        // Merge database items with local items
+        if (Array.isArray(cartData)) {
+          setCart([...cartData, ...localCart])
+        } else {
+          setCart(localCart)
+        }
+        if (Array.isArray(wishlistData)) {
+          setWishlist([...wishlistData, ...localWishlist])
+        } else {
+          setWishlist(localWishlist)
         }
       } catch (_err) {
-        // Silently fail if cart/wishlist can't load - user can still use the app
-        setToast('Could not load saved cart/wishlist yet.')
+        // Silently fail if cart/wishlist can't load - try loading from localStorage
+        console.error('Failed to load cart/wishlist from database:', _err)
+        try {
+          const savedCart = localStorage.getItem('cart')
+          const savedWishlist = localStorage.getItem('wishlist')
+          if (savedCart) {
+            const cartData = JSON.parse(savedCart)
+            if (Array.isArray(cartData)) setCart(cartData)
+          }
+          if (savedWishlist) {
+            const wishlistData = JSON.parse(savedWishlist)
+            if (Array.isArray(wishlistData)) setWishlist(wishlistData)
+          }
+        } catch (_e) {
+          // Ignore
+        }
+        setToast('Could not load saved cart/wishlist from database.')
       }
     })()
   }, [user])
@@ -1559,7 +2240,7 @@ function AppShell() {
   }, [toast])
 
   // Sign-in handler for both email form and Google simulation.
-  const handleEmailLogin = async ({ email, name }) => {
+  const handleEmailLogin = async ({ email, name, image }) => {
     if (!email) throw new Error('Email is required')
     const domain = email.split('@')[1]
     if (!ALLOWED_DOMAINS.includes(domain) && email !== 'souparno.cs24@bmsce.ac.in') {
@@ -1567,17 +2248,51 @@ function AppShell() {
     }
     setLoading(true)
     try {
-      const payload = await apiRequest('/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ email, name }),
-      })
-      setUser(payload.user)
+      let userData
+      if (USE_SUPABASE) {
+        // Use Supabase - check if user exists, create if not
+        let dbUser = await db.getUserByEmail(email)
+        if (!dbUser) {
+          dbUser = await db.createUser({
+            email,
+            name,
+            image,
+            isAdmin: email === 'souparno.cs24@bmsce.ac.in',
+          })
+        } else {
+          // Update name/image if provided
+          if (name || image) {
+            await db.updateUser(email, { name, image })
+            dbUser = await db.getUserByEmail(email)
+          }
+        }
+        userData = {
+          id: dbUser.id,
+          email: dbUser.email,
+          name: dbUser.name,
+          image: dbUser.avatar_url,
+          isAdmin: dbUser.role === 'admin',
+          phoneNumber: dbUser.phone_number,
+          usn: dbUser.usn,
+          semester: dbUser.semester,
+        }
+      } else {
+        // Use REST API
+        const payload = await apiRequest('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ email, name, image }),
+        })
+        userData = payload.user
+      }
+      setUser(userData)
       setToast('Signed in successfully.')
     } catch (_err) {
+      console.error('Sign-in error:', _err)
       // Backend auth failed, create a local user session so the app still works
       setUser({ 
         email, 
         name, 
+        image,
         isAdmin: email === 'souparno.cs24@bmsce.ac.in',
         phoneNumber: null,
         usn: null,
@@ -1628,28 +2343,8 @@ function AppShell() {
 
       setLoading(true)
       try {
-        const payload = await apiRequest('/auth/login', {
-          method: 'POST',
-          body: JSON.stringify({ email, name, image }),
-        })
-        const userData = {
-          ...payload.user,
-          image: image || payload.user.image,
-        }
-        setUser(userData)
-        setToast('Signed in with Google successfully.')
-      } catch (_err) {
-        // Backend auth failed, create a local user session so the app still works
-        setUser({
-          email,
-          name,
-          image,
-          isAdmin: email === 'souparno.cs24@bmsce.ac.in',
-          phoneNumber: null,
-          usn: null,
-          semester: null,
-        })
-        setToast('Backend auth offline, using local session.')
+        // Use the same handler for Google sign-in
+        await handleEmailLogin({ email, name, image })
       } finally {
         setLoading(false)
       }
@@ -1663,7 +2358,9 @@ function AppShell() {
   const handleAddToCartClick = (serviceId) => {
     try {
       if (!user) {
-        setToast('Sign in first.')
+        setToast('Please sign in to show interest.')
+        // Navigate to sign in page
+        navigate('/signin')
         return
       }
       if (!Array.isArray(services)) {
@@ -1688,82 +2385,183 @@ function AppShell() {
     if (!serviceId || !user) return
 
     try {
-      const updated = await apiRequest('/cart', {
-        method: 'POST',
-        body: JSON.stringify({
+      let updated
+      if (USE_SUPABASE) {
+        // Use Supabase - save to database
+        await db.addToCart({
           userEmail: user.email,
           serviceId,
           quantity: 1,
           portfolioLink,
           message,
-        }),
-      })
-      setCart(updated)
-      setToast('Added to cart.')
-    } catch (_err) {
-      // Cart update failed - fallback to local storage
-      const service = addToCartModal.service
-      if (service) {
-        const newCartItem = {
-          id: Date.now().toString(),
-          userEmail: user.email,
-          serviceId,
-          quantity: 1,
-          service,
-          portfolioLink,
-          message,
-          addedAt: new Date().toISOString(),
-        }
-        setCart((prev) => {
-          const exists = prev.find((item) => item.serviceId === serviceId)
-          if (exists) return prev
-          return [...prev, newCartItem]
         })
-        setToast('Added to cart (local storage).')
+        // Fetch updated cart from database
+        updated = await db.getCart(user.email)
+        setCart(updated || [])
+        setToast('Interest shown successfully!')
       } else {
-        setToast('Unable to update cart right now.')
+        // Use REST API
+        updated = await apiRequest('/cart', {
+          method: 'POST',
+          body: JSON.stringify({
+            userEmail: user.email,
+            serviceId,
+            quantity: 1,
+            portfolioLink,
+            message,
+          }),
+        })
+        setCart(updated || [])
+        setToast('Interest shown successfully!')
       }
+    } catch (_err) {
+      // Handle example services - store them locally
+      if (_err?.message === 'EXAMPLE_SERVICE' || _err?.message?.includes('EXAMPLE_SERVICE')) {
+        const service = services.find((svc) => svc && svc.id === serviceId)
+        if (service) {
+          const localCartItem = {
+            id: `local-${Date.now()}`,
+            serviceId,
+            service,
+            quantity: 1,
+            portfolioLink,
+            message,
+          }
+          setCart((prev) => {
+            const newCart = [...prev, localCartItem]
+            // Save local items separately for persistence
+            const localItems = newCart.filter(item => item.id?.startsWith('local-'))
+            localStorage.setItem('local_cart', JSON.stringify(localItems))
+            return newCart
+          })
+          setToast('Interest shown for example service (local only).')
+          return
+        }
+      }
+      console.error('Add to cart error:', _err)
+      const errorMessage = _err?.message || 'Failed to add to cart. Please try again.'
+      setToast(errorMessage)
+      // Don't fallback to local state if user is signed in - we want database sync
+      throw _err
     }
   }
 
   // Remove from cart.
   const handleRemoveFromCart = async (cartId) => {
     try {
-      if (user?.email) {
-        const updated = await apiRequest(`/cart/${cartId}?userEmail=${encodeURIComponent(user.email)}`, {
-          method: 'DELETE',
+      const isLocalItem = cartId?.toString().startsWith('local-')
+      
+      if (isLocalItem) {
+        // Remove local item
+        setCart((prev) => {
+          const newCart = prev.filter((item) => item.id !== cartId)
+          const localItems = newCart.filter(item => item.id?.startsWith('local-'))
+          localStorage.setItem('local_cart', JSON.stringify(localItems))
+          return newCart
         })
-        setCart(updated)
+        setToast('Removed from cart.')
+        return
+      }
+      
+      if (user?.email) {
+        if (USE_SUPABASE) {
+          // Use Supabase - remove from database
+          await db.removeFromCart(cartId, user.email)
+          // Fetch updated cart from database and merge with local items
+          const dbCart = await db.getCart(user.email)
+          const localItems = cart.filter(item => item.id?.startsWith('local-'))
+          setCart([...dbCart, ...localItems])
+          setToast('Removed from cart.')
+        } else {
+          // Use REST API
+          const updated = await apiRequest(`/cart/${cartId}?userEmail=${encodeURIComponent(user.email)}`, {
+            method: 'DELETE',
+          })
+          const localItems = cart.filter(item => item.id?.startsWith('local-'))
+          setCart([...updated, ...localItems])
+          setToast('Removed from cart.')
+        }
       } else {
         // No user, just remove from local state
         setCart((prev) => prev.filter((item) => item.id !== cartId))
       }
     } catch (_err) {
-      // Backend removal failed, remove from local state as fallback
-      setCart((prev) => prev.filter((item) => item.id !== cartId))
+      console.error('Remove from cart error:', _err)
+      setToast('Failed to remove from cart. Please try again.')
+      // Fallback: remove from local state
+      setCart((prev) => {
+        const newCart = prev.filter((item) => item.id !== cartId)
+        const localItems = newCart.filter(item => item.id?.startsWith('local-'))
+        localStorage.setItem('local_cart', JSON.stringify(localItems))
+        return newCart
+      })
     }
   }
 
   // Wishlist toggle.
   const handleToggleWishlist = async (serviceId) => {
     if (!user) {
-      setToast('Sign in first.')
+      setToast('Sign in first to save items to wishlist.')
+      // Still allow local wishlist for preview
+      const service = services.find((svc) => svc && svc.id === serviceId)
+      if (service) {
+        setWishlist((prev) => {
+          const exists = prev.find((item) => item.serviceId === serviceId)
+          if (exists) {
+            setToast('Removed from wishlist (local). Sign in to save permanently.')
+            return prev.filter((item) => item.serviceId !== serviceId)
+          }
+          return [...prev, { id: Date.now().toString(), serviceId, service }]
+        })
+      }
       return
     }
     try {
-      const updated = await apiRequest('/wishlist', {
-        method: 'POST',
-        body: JSON.stringify({ userEmail: user.email, serviceId }),
-      })
-      setWishlist(updated)
+      let updated
+      if (USE_SUPABASE) {
+        // Use Supabase - toggle in database
+        await db.toggleWishlist(user.email, serviceId)
+        // Fetch updated wishlist from database
+        updated = await db.getWishlist(user.email)
+      } else {
+        // Use REST API
+        updated = await apiRequest('/wishlist', {
+          method: 'POST',
+          body: JSON.stringify({ userEmail: user.email, serviceId }),
+        })
+      }
+      setWishlist(updated || [])
+      const wasAdded = updated?.some(item => item.serviceId === serviceId)
+      setToast(wasAdded ? 'Added to wishlist!' : 'Removed from wishlist!')
     } catch (_err) {
-      // Backend wishlist update failed, toggle locally as fallback
-      setWishlist((prev) => {
-        const exists = prev.find((item) => item.serviceId === serviceId)
-        if (exists) return prev.filter((item) => item.serviceId !== serviceId)
-        const service = services.find((svc) => svc.id === serviceId)
-        return [...prev, { id: Date.now().toString(), serviceId, service }]
-      })
+      // Handle example services - store them locally
+      if (_err?.message === 'EXAMPLE_SERVICE' || _err?.message?.includes('EXAMPLE_SERVICE')) {
+        const service = services.find((svc) => svc && svc.id === serviceId)
+        if (service) {
+          setWishlist((prev) => {
+            const exists = prev.find((item) => item.serviceId === serviceId)
+            if (exists) {
+              setToast('Removed from wishlist (local).')
+              const newWishlist = prev.filter((item) => item.serviceId !== serviceId)
+              // Save local items separately for persistence
+              const localItems = newWishlist.filter(item => item.id?.startsWith('local-'))
+              localStorage.setItem('local_wishlist', JSON.stringify(localItems))
+              return newWishlist
+            }
+            setToast('Added example service to wishlist (local only).')
+            const newWishlist = [...prev, { id: `local-${Date.now()}`, serviceId, service }]
+            // Save local items separately for persistence
+            const localItems = newWishlist.filter(item => item.id?.startsWith('local-'))
+            localStorage.setItem('local_wishlist', JSON.stringify(localItems))
+            return newWishlist
+          })
+          return
+        }
+      }
+      console.error('Toggle wishlist error:', _err)
+      const errorMessage = _err?.message || 'Failed to update wishlist. Please try again.'
+      setToast(errorMessage)
+      // Don't update local state if user is signed in - we want database sync
     }
   }
 
@@ -1780,26 +2578,62 @@ function AppShell() {
   // Fetch admin-only dashboards.
   const fetchAdminData = async (adminEmail) => {
     try {
-      const [ordersData, inventoryData] = await Promise.all([
-        apiRequest(`/orders?userEmail=${encodeURIComponent(adminEmail)}`),
-        apiRequest('/admin/inventory', {
-          headers: { 'x-admin-email': adminEmail },
-        }),
-      ])
-      setOrders(ordersData)
-      setInventory({
-        hosts: Object.entries(inventoryData.servicesByHost || {}).map(([hostEmail, services]) => ({
-          hostEmail,
-          services,
-        })),
-        students: Object.entries(inventoryData.cartByStudent || {}).map(([studentEmail, items]) => ({
-          studentEmail,
-          items,
-        })),
-      })
-    } catch (_err) {
+      let ordersData, inventoryData
+      
+      if (USE_SUPABASE) {
+        // Use Supabase for admin data
+        try {
+          [ordersData, inventoryData] = await Promise.all([
+            db.getOrders(adminEmail, true), // isAdmin = true
+            db.getAdminInventory(),
+          ])
+          
+          // Transform inventory data to match expected format
+          setOrders(ordersData || [])
+          setInventory({
+            hosts: inventoryData?.servicesByHost || [],
+            students: inventoryData?.cartByStudent || [],
+          })
+          setToast(null) // Clear any previous errors
+        } catch (supabaseErr) {
+          console.error('Supabase admin data fetch error:', supabaseErr)
+          // If Supabase fails, try REST API as fallback if available
+          if (API_URL && API_URL !== 'http://localhost:4000') {
+            throw new Error('Supabase error: ' + (supabaseErr.message || 'Unknown error'))
+          }
+          // If no REST API, just set empty data
+          setOrders([])
+          setInventory({ hosts: [], students: [] })
+          throw supabaseErr
+        }
+      } else {
+        // Use REST API
+        [ordersData, inventoryData] = await Promise.all([
+          apiRequest(`/orders?userEmail=${encodeURIComponent(adminEmail)}`),
+          apiRequest('/admin/inventory', {
+            headers: { 'x-admin-email': adminEmail },
+          }),
+        ])
+        setOrders(ordersData || [])
+        setInventory({
+          hosts: Object.entries(inventoryData.servicesByHost || {}).map(([hostEmail, services]) => ({
+            hostEmail,
+            services,
+          })),
+          students: Object.entries(inventoryData.cartByStudent || {}).map(([studentEmail, items]) => ({
+            studentEmail,
+            items,
+          })),
+        })
+      }
+    } catch (err) {
       // Admin dashboard data failed to load - show error but don't crash
-      setToast('Admin data failed to load.')
+      console.error('Admin data fetch error:', err)
+      const errorMsg = err.message || err.toString() || 'Unknown error'
+      setToast('Admin data failed to load: ' + errorMsg)
+      // Set empty data so UI doesn't break
+      setOrders([])
+      setInventory({ hosts: [], students: [] })
     }
   }
 
@@ -1811,9 +2645,15 @@ function AppShell() {
       // Load orders for regular users (hosts and students)
       ;(async () => {
         try {
-          const ordersData = await apiRequest(`/orders?userEmail=${encodeURIComponent(user.email)}`)
-          setOrders(ordersData)
+          let ordersData
+          if (USE_SUPABASE) {
+            ordersData = await db.getOrders(user.email, false)
+          } else {
+            ordersData = await apiRequest(`/orders?userEmail=${encodeURIComponent(user.email)}`)
+          }
+          setOrders(ordersData || [])
         } catch (_err) {
+          console.error('Failed to load orders:', _err)
           // Silently fail
         }
       })()
@@ -1822,12 +2662,18 @@ function AppShell() {
 
   // Refresh orders when cart changes
   useEffect(() => {
-    if (user && orders.length > 0) {
+    if (user) {
       ;(async () => {
         try {
-          const ordersData = await apiRequest(`/orders?userEmail=${encodeURIComponent(user.email)}`)
-          setOrders(ordersData)
+          let ordersData
+          if (USE_SUPABASE) {
+            ordersData = await db.getOrders(user.email, user?.isAdmin || false)
+          } else {
+            ordersData = await apiRequest(`/orders?userEmail=${encodeURIComponent(user.email)}`)
+          }
+          setOrders(ordersData || [])
         } catch (_err) {
+          console.error('Failed to refresh orders:', _err)
           // Silently fail
         }
       })()
@@ -1898,6 +2744,17 @@ function AppShell() {
                     onAddToCart={handleAddToCartClick}
                     onToggleWishlist={handleToggleWishlist}
                     isWishlisted={isWishlisted}
+                    onServiceClick={(service) => setServiceDetailModal({ open: true, service })}
+                  />
+                  <ServiceDetailModal
+                    service={serviceDetailModal.service}
+                    open={serviceDetailModal.open}
+                    onClose={() => setServiceDetailModal({ open: false, service: null })}
+                    onAddToCart={handleAddToCartClick}
+                    onToggleWishlist={handleToggleWishlist}
+                    isWishlisted={isWishlisted}
+                    user={user}
+                    mode={mode}
                   />
                 </>
               )}
@@ -1944,8 +2801,9 @@ function AppShell() {
             />
           }
         />
-        <Route path="/signin" element={<SignInPage onEmailLogin={handleEmailLogin} loading={loading} />} />
-        <Route path="/profile/manage-orders" element={<AdminOrdersPage orders={orders} user={user} cart={cart} />} />
+        <Route path="/signin" element={<SignInPage onEmailLogin={handleEmailLogin} onGoogleSignIn={handleGoogleSignIn} loading={loading} user={user} />} />
+        <Route path="/profile/manage-orders" element={<AdminOrdersPage orders={orders} user={user} cart={cart} inventory={inventory} />} />
+        <Route path="/profile/manage-items" element={<AdminManageItemsPage inventory={inventory} user={user} onServiceDeleted={handleServiceCreated} onToast={setToast} />} />
       </Routes>
 
       <FloatingSearch
@@ -1974,18 +2832,33 @@ function AppShell() {
         onClose={() => setProfileEditModal(false)}
         onSave={async (formData) => {
           try {
-            const updated = await apiRequest('/users/profile', {
-              method: 'PUT',
-              body: JSON.stringify({
-                email: user.email,
-                phoneNumber: formData.phoneNumber,
-                usn: formData.usn,
-                semester: formData.semester,
-              }),
-            })
+            let updated
+            if (USE_SUPABASE) {
+              // Use Supabase to update user profile
+              const supabaseUser = await db.updateUser(user.email, formData)
+              updated = {
+                phoneNumber: supabaseUser.phone_number,
+                usn: supabaseUser.usn,
+                semester: supabaseUser.semester,
+                name: supabaseUser.name,
+                image: supabaseUser.avatar_url,
+              }
+            } else {
+              // Use REST API
+              updated = await apiRequest('/users/profile', {
+                method: 'PUT',
+                body: JSON.stringify({
+                  email: user.email,
+                  phoneNumber: formData.phoneNumber,
+                  usn: formData.usn,
+                  semester: formData.semester,
+                }),
+              })
+            }
             setUser({ ...user, ...updated })
             setToast('Profile updated successfully!')
           } catch (err) {
+            console.error('Profile update error:', err)
             // Fallback to local storage
             const updatedUser = { ...user, ...formData }
             setUser(updatedUser)

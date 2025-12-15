@@ -5,6 +5,7 @@
  */
 
 /* ========== Global Root Variables and Base Styles ========== */
+
 /* Sets the default font stack and dark background for the entire app */
 :root {
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
@@ -85,6 +86,179 @@ input {
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: 120px;
+  min-height: 40px;
+}
+
+/* ========== Welcome Sign-In Modal (Merch Style) ========== */
+.welcome-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+.welcome-modal {
+  background: #ffffff;
+  border-radius: 1rem;
+  width: min(420px, 90vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+.welcome-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.welcome-modal-header h2 {
+  margin: 0;
+  color: #121212;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.welcome-modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  transition: background 0.2s ease;
+}
+
+.welcome-modal-close:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.welcome-modal-body {
+  padding: 1.5rem;
+  color: #121212;
+}
+
+.welcome-text {
+  margin: 0 0 1.5rem 0;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.welcome-google-signin {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.welcome-google-button-container {
+  width: 100%;
+}
+
+.welcome-google-button-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.welcome-google-button-wrapper > div {
+  width: 100% !important;
+}
+
+.welcome-google-button-wrapper iframe {
+  width: 100% !important;
+  min-width: 100% !important;
+}
+
+.welcome-domains-info {
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.welcome-domains-title {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.welcome-domains-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.welcome-domains-list li {
+  color: #121212;
+  font-size: 0.9rem;
+  padding-left: 1.25rem;
+  position: relative;
+}
+
+.welcome-domains-list li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #00d084;
+  font-weight: bold;
+}
+
+.welcome-signed-in {
+  text-align: center;
+}
+
+.welcome-signed-in-text {
+  margin: 0 0 1rem 0;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.welcome-user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(0, 208, 132, 0.05);
+  border-radius: 0.75rem;
+  border: 1px solid rgba(0, 208, 132, 0.2);
+}
+
+.welcome-user-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.welcome-user-details {
+  flex: 1;
+  text-align: left;
+}
+
+.welcome-user-name {
+  margin: 0 0 0.25rem 0;
+  font-weight: 600;
+  color: #121212;
+  font-size: 1rem;
+}
+
+.welcome-user-email {
+  margin: 0;
+  color: #666;
+  font-size: 0.875rem;
 }
 
 /* Logo pair displays "Fiverr" in green and "for Students" in muted color */
@@ -204,16 +378,27 @@ input {
 /* Profile dropdown menu using HTML details element */
 .profile-menu {
   position: relative;
+  display: inline-block;
+}
+
+.profile-menu summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.profile-menu summary::-webkit-details-marker {
+  display: none;
 }
 
 .profile-summary {
-  list-style: none;
+  list-style: none !important;
   display: flex;
   align-items: center;
   cursor: pointer;
   border-radius: 999px;
   padding: 0.25rem;
   transition: background 0.2s ease;
+  outline: none;
 }
 
 .profile-summary:hover {
@@ -248,13 +433,7 @@ input {
   border-color: rgba(0, 0, 0, 0.1);
 }
 
-.profile-menu summary {
-  list-style: none;
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  cursor: pointer;
-}
+/* Removed duplicate - using profile-summary instead */
 
 /* Profile card dropdown content with admin links */
 .profile-card {
@@ -270,7 +449,8 @@ input {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  z-index: 60;
+  z-index: 100;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 /* Light theme variant for profile card in host mode */
@@ -1243,6 +1423,51 @@ input {
   flex: 1;
 }
 
+.cart-host-contact,
+.host-contact-info,
+.host-contact {
+  margin-top: 0.75rem;
+  font-size: 0.95rem;
+}
+
+.cart-host-contact strong,
+.host-contact-info strong {
+  color: #00d084;
+  margin-right: 0.5rem;
+}
+
+.cart-host-contact a,
+.host-contact-info a,
+.host-contact a {
+  color: #60a5fa;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.cart-host-contact a:hover,
+.host-contact-info a:hover,
+.host-contact a:hover {
+  color: #3b82f6;
+  text-decoration: underline;
+}
+
+.host-contact {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.host-email a {
+  color: #60a5fa;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.host-email a:hover {
+  color: #3b82f6;
+  text-decoration: underline;
+}
+
 .cart-item-price {
   margin-top: 0.75rem;
   font-size: 1.1rem;
@@ -1477,6 +1702,229 @@ input {
   opacity: 0.7;
 }
 
+/* ========== Service Detail Modal Styles ========== */
+.service-detail-overlay {
+  backdrop-filter: blur(8px);
+}
+
+.service-detail-modal {
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 2rem;
+  position: relative;
+}
+
+.service-detail-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.service-detail-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.service-detail-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.service-detail-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.service-detail-category {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  background: rgba(0, 208, 132, 0.2);
+  color: #00d084;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.75rem;
+}
+
+.service-detail-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+  color: inherit;
+}
+
+.service-detail-wishlist {
+  flex-shrink: 0;
+}
+
+.service-detail-host {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.service-detail-host .host-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+}
+
+.host-rating {
+  font-weight: 600;
+  color: #ffc107;
+}
+
+.host-name {
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.host-email {
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+.service-detail-body {
+  margin-bottom: 2rem;
+}
+
+.service-detail-description,
+.service-detail-tags,
+.service-detail-delivery,
+.service-detail-portfolio {
+  margin-bottom: 2rem;
+}
+
+.service-detail-description h3,
+.service-detail-tags h3,
+.service-detail-delivery h3,
+.service-detail-portfolio h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: inherit;
+}
+
+.service-detail-description p {
+  font-size: 1rem;
+  line-height: 1.7;
+  opacity: 0.9;
+}
+
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag {
+  display: inline-block;
+  padding: 0.4rem 0.9rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background 0.2s ease;
+}
+
+.tag:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.service-detail-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1.5rem;
+  border-top: 2px solid rgba(255, 255, 255, 0.1);
+  gap: 2rem;
+}
+
+.service-detail-price {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.price-label {
+  font-size: 0.85rem;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.price-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #00d084;
+}
+
+.btn-add-to-cart-large {
+  padding: 1rem 2.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 999px;
+  min-width: 200px;
+}
+
+.service-card-clickable {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.service-card-clickable:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 208, 132, 0.15);
+}
+
+/* Light mode adjustments for service detail modal */
+body.host-mode-active .service-detail-modal {
+  background: #ffffff;
+  color: #171717;
+}
+
+body.host-mode-active .service-detail-header {
+  border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
+body.host-mode-active .service-detail-close {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+body.host-mode-active .service-detail-close:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+body.host-mode-active .tag {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+body.host-mode-active .tag:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+body.host-mode-active .service-detail-footer {
+  border-top-color: rgba(0, 0, 0, 0.1);
+}
+
 /* ========== Responsive Breakpoints ========== */
 /* Mobile and tablet adjustments */
 @media (max-width: 900px) {
@@ -1514,4 +1962,335 @@ input {
   .host-page {
     padding: 2rem 1rem;
   }
+
+  /* Service detail modal mobile adjustments */
+  .service-detail-modal {
+    padding: 1.5rem;
+    max-width: 95vw;
+  }
+
+  .service-detail-title {
+    font-size: 1.5rem;
+  }
+
+  .service-detail-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .btn-add-to-cart-large {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .service-detail-header-top {
+    flex-direction: column;
+  }
+
+  .price-value {
+    font-size: 1.5rem;
+  }
+}
+
+/* ========== Admin Manage Items Page Styles ========== */
+.admin-note {
+  background: linear-gradient(135deg, rgba(0, 208, 132, 0.15), rgba(59, 130, 246, 0.15));
+  color: #00d084;
+  padding: 1rem 1.5rem;
+  border-radius: 0.75rem;
+  margin-bottom: 2rem;
+  border: 1px solid rgba(0, 208, 132, 0.3);
+  font-size: 0.95rem;
+}
+
+.admin-items-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.admin-host-group {
+  background: linear-gradient(135deg, rgba(0, 208, 132, 0.08), rgba(59, 130, 246, 0.08));
+  border: 2px solid rgba(0, 208, 132, 0.2);
+  border-radius: 1rem;
+  padding: 2rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-host-group:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 208, 132, 0.2);
+}
+
+.admin-host-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid rgba(0, 208, 132, 0.2);
+}
+
+.admin-host-info h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  color: #00d084;
+  background: linear-gradient(135deg, #00d084, #3b82f6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.admin-host-email {
+  color: #60a5fa;
+  font-size: 0.95rem;
+  margin: 0.25rem 0;
+  font-weight: 500;
+}
+
+.admin-host-phone {
+  color: #34d399;
+  font-size: 0.9rem;
+  margin: 0.25rem 0;
+}
+
+.admin-host-usn {
+  color: #fbbf24;
+  font-size: 0.9rem;
+  margin: 0.25rem 0;
+  font-weight: 500;
+}
+
+.admin-host-semester {
+  color: #a78bfa;
+  font-size: 0.9rem;
+  margin: 0.25rem 0;
+}
+
+.admin-host-stats {
+  display: flex;
+  align-items: center;
+}
+
+.admin-host-service-count {
+  background: linear-gradient(135deg, rgba(0, 208, 132, 0.2), rgba(59, 130, 246, 0.2));
+  color: #00d084;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: 1px solid rgba(0, 208, 132, 0.3);
+}
+
+.admin-services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.admin-service-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(0, 208, 132, 0.2);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.admin-service-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(0, 208, 132, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 208, 132, 0.15);
+}
+
+.admin-service-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.admin-service-header h4 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0;
+  color: #ffffff;
+  flex: 1;
+}
+
+.btn-delete-admin {
+  border: none;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.btn-delete-admin:hover {
+  background: rgba(239, 68, 68, 0.25);
+  transform: scale(1.1);
+}
+
+.btn-delete-admin:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.admin-service-category {
+  display: inline-block;
+  padding: 0.3rem 0.7rem;
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.2), rgba(236, 72, 153, 0.2));
+  color: #c084fc;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.75rem;
+}
+
+.admin-service-price {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #00d084;
+  margin: 0.75rem 0;
+  background: linear-gradient(135deg, #00d084, #10b981);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.admin-service-delivery {
+  color: #60a5fa;
+  font-size: 0.9rem;
+  margin: 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-service-created {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85rem;
+  margin: 0.75rem 0 0 0;
+  font-style: italic;
+}
+
+/* Light mode adjustments for admin pages */
+body.host-mode-active .admin-note {
+  background: linear-gradient(135deg, rgba(0, 208, 132, 0.1), rgba(59, 130, 246, 0.1));
+  color: #059669;
+  border-color: rgba(0, 208, 132, 0.2);
+}
+
+body.host-mode-active .admin-host-group {
+  background: linear-gradient(135deg, rgba(0, 208, 132, 0.05), rgba(59, 130, 246, 0.05));
+  border-color: rgba(0, 208, 132, 0.15);
+}
+
+body.host-mode-active .admin-host-info h3 {
+  color: #059669;
+}
+
+body.host-mode-active .admin-host-email {
+  color: #2563eb;
+}
+
+body.host-mode-active .admin-service-card {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(0, 208, 132, 0.15);
+  color: #171717;
+}
+
+body.host-mode-active .admin-service-card:hover {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+body.host-mode-active .admin-service-header h4 {
+  color: #171717;
+}
+
+body.host-mode-active .admin-service-created {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+/* ========== Enhanced Colorful UI Improvements ========== */
+/* More vibrant service cards */
+.service-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), rgba(0, 208, 132, 0.03));
+  border: 1px solid rgba(0, 208, 132, 0.15);
+  transition: all 0.3s ease;
+}
+
+.service-card:hover {
+  border-color: rgba(0, 208, 132, 0.4);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(0, 208, 132, 0.06));
+  box-shadow: 0 8px 24px rgba(0, 208, 132, 0.2);
+}
+
+/* More colorful category badges */
+.category {
+  background: linear-gradient(135deg, rgba(0, 208, 132, 0.1), rgba(59, 130, 246, 0.1));
+  border: 1px solid rgba(0, 208, 132, 0.2);
+  transition: all 0.2s ease;
+}
+
+.category:hover {
+  background: linear-gradient(135deg, rgba(0, 208, 132, 0.2), rgba(59, 130, 246, 0.2));
+  border-color: rgba(0, 208, 132, 0.4);
+  transform: translateY(-2px);
+}
+
+.category.active {
+  background: linear-gradient(135deg, rgba(0, 208, 132, 0.3), rgba(59, 130, 246, 0.3));
+  border-color: #00d084;
+  box-shadow: 0 4px 12px rgba(0, 208, 132, 0.3);
+}
+
+/* More vibrant buttons */
+.btn-primary {
+  background: linear-gradient(135deg, #00d084, #10b981);
+  box-shadow: 0 4px 12px rgba(0, 208, 132, 0.3);
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #10b981, #00d084);
+  box-shadow: 0 6px 16px rgba(0, 208, 132, 0.4);
+  transform: translateY(-2px);
+}
+
+/* Colorful order cards */
+.order-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), rgba(59, 130, 246, 0.03));
+  border: 2px solid rgba(59, 130, 246, 0.2);
+  transition: all 0.2s ease;
+}
+
+.order-card:hover {
+  border-color: rgba(59, 130, 246, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.2);
+}
+
+/* Colorful tags */
+.tag {
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.2), rgba(236, 72, 153, 0.2));
+  border: 1px solid rgba(147, 51, 234, 0.3);
+  color: #c084fc;
+}
+
+.tag:hover {
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.3), rgba(236, 72, 153, 0.3));
+  border-color: rgba(147, 51, 234, 0.5);
 }
